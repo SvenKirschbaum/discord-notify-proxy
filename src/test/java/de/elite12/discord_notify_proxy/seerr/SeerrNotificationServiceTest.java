@@ -9,6 +9,7 @@ import de.elite12.discord_notify_proxy.seerr.model.SeerrNotificationResult;
 import de.elite12.discord_notify_proxy.seerr.model.SeerrWebhookPayload;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.aot.DisabledInAotMode;
 
 import java.awt.Color;
 import java.util.List;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+@DisabledInAotMode("Uses Mockito mocks that are only needed for JVM tests")
 class SeerrNotificationServiceTest {
 
     private final DiscordService discordService = mock(DiscordService.class);
