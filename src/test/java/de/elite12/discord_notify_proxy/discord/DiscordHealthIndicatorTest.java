@@ -3,11 +3,13 @@ package de.elite12.discord_notify_proxy.discord;
 import net.dv8tion.jda.api.JDA;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.health.contributor.Status;
+import org.springframework.test.context.aot.DisabledInAotMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@DisabledInAotMode("Uses Mockito bean overrides that are only needed for JVM tests")
 class DiscordHealthIndicatorTest {
 
     @Test
