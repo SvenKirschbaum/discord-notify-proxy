@@ -1,12 +1,16 @@
 package de.elite12.discord_notify_proxy.seerr;
 
 import de.elite12.discord_notify_proxy.discord.DiscordService;
+import de.elite12.discord_notify_proxy.observability.NotificationMetrics;
 import de.elite12.discord_notify_proxy.seerr.model.DeliveryStatus;
 import de.elite12.discord_notify_proxy.seerr.model.MediaAvailabilityStatus;
 import de.elite12.discord_notify_proxy.seerr.model.MediaType;
 import de.elite12.discord_notify_proxy.seerr.model.SeerrNotificationResult;
 import de.elite12.discord_notify_proxy.seerr.model.SeerrWebhookPayload;
 import de.elite12.discord_notify_proxy.seerr.model.NotificationType;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.springframework.stereotype.Service;
@@ -22,23 +26,45 @@ import java.util.Set;
 public class SeerrNotificationService {
 
     private static final int DESCRIPTION_LIMIT = 900;
+    private static final AttributeKey<List<String>> USER_IDS_ATTRIBUTE = AttributeKey.stringArrayKey("seerr.user_ids");
 
     private final DiscordService discordService;
+    private final NotificationMetrics notificationMetrics;
 
-    public SeerrNotificationService(DiscordService discordService) {
+    public SeerrNotificationService(DiscordService discordService, NotificationMetrics notificationMetrics) {
         this.discordService = discordService;
+        this.notificationMetrics = notificationMetrics;
     }
 
+    @WithSpan("seerr.process")
     public SeerrNotificationResult process(SeerrWebhookPayload payload) {
-        Set<Long> recipientIds = resolveRecipientIds(payload);
+        MediaType mediaType = payload.resolvedMediaType();
+        notificationMetrics.recordWebhookReceived(payload.notificationType(), mediaType);
+
+        RecipientResolution recipientResolution = resolveRecipientIds(payload);
+        Set<Long> recipientIds = recipientResolution.recipientIds();
+        Span span = Span.current();
+        setWebhookSpanAttributes(span, payload, mediaType, recipientResolution);
+        span.addEvent("recipients.resolved");
+
         if (recipientIds.isEmpty()) {
-            return new SeerrNotificationResult(DeliveryStatus.IGNORED, 0, "No Discord recipients in user notification context");
+            notificationMetrics.recordWebhookIgnored(payload.notificationType(), mediaType, recipientResolution.recipientSource());
+            SeerrNotificationResult result = new SeerrNotificationResult(DeliveryStatus.IGNORED, 0, "No Discord recipients in user notification context");
+            notificationMetrics.recordWebhookProcessed(payload.notificationType(), mediaType, result.status());
+            span.setAttribute("seerr.delivery_status", result.status().name());
+            return result;
         }
 
         MessageEmbed embed = buildEmbed(payload);
+        span.addEvent("discord.enqueue.started");
         recipientIds.forEach(discordUserId -> discordService.sendDirectMessage(discordUserId, embed));
+        span.addEvent("discord.enqueue.completed");
 
-        return new SeerrNotificationResult(DeliveryStatus.SENT, recipientIds.size(), "Queued Discord direct messages");
+        SeerrNotificationResult result = new SeerrNotificationResult(DeliveryStatus.SENT, recipientIds.size(), "Queued Discord direct messages");
+        notificationMetrics.recordRecipientCount(payload.notificationType(), mediaType, recipientResolution.recipientSource(), recipientIds.size());
+        notificationMetrics.recordWebhookProcessed(payload.notificationType(), mediaType, result.status());
+        span.setAttribute("seerr.delivery_status", result.status().name());
+        return result;
     }
 
     MessageEmbed buildEmbed(SeerrWebhookPayload payload) {
@@ -85,13 +111,12 @@ public class SeerrNotificationService {
         return embedBuilder.build();
     }
 
-    private Set<Long> resolveRecipientIds(SeerrWebhookPayload payload) {
-        List<String> notifyUserDiscordIds = payload.resolvedNotifyUserDiscordIds();
-        List<String> preferredIds = hasValues(notifyUserDiscordIds)
-                ? notifyUserDiscordIds
-                : fallbackRecipientIds(payload);
+    private RecipientResolution resolveRecipientIds(SeerrWebhookPayload payload) {
+        RecipientSourceResolution recipientSourceResolution = resolvePreferredRecipientIds(payload);
+        List<String> preferredIds = recipientSourceResolution.recipientIds();
 
         Set<Long> recipientIds = new LinkedHashSet<>();
+        int malformedIds = 0;
         for (String rawId : preferredIds) {
             if (rawId == null || rawId.isBlank()) {
                 continue;
@@ -101,10 +126,55 @@ public class SeerrNotificationService {
                 recipientIds.add(Long.parseLong(rawId.trim()));
             } catch (NumberFormatException ignored) {
                 // Ignore malformed IDs from upstream payloads.
+                malformedIds++;
+                notificationMetrics.recordMalformedRecipientId(payload.notificationType(), recipientSourceResolution.source());
             }
         }
 
-        return recipientIds;
+        return new RecipientResolution(recipientIds, recipientSourceResolution.source(), malformedIds);
+    }
+
+    private RecipientSourceResolution resolvePreferredRecipientIds(SeerrWebhookPayload payload) {
+        List<String> notifyUserDiscordIds = payload.resolvedNotifyUserDiscordIds();
+        if (hasValues(notifyUserDiscordIds)) {
+            return new RecipientSourceResolution(notifyUserDiscordIds, "notify_user");
+        }
+
+        if (isIssueNotification(payload.notificationType())) {
+            if (hasValues(payload.resolvedReportedByDiscordIds())) {
+                return new RecipientSourceResolution(payload.resolvedReportedByDiscordIds(), "reported_by");
+            }
+            return new RecipientSourceResolution(payload.resolvedCommentedByDiscordIds(), "commented_by");
+        }
+
+        return new RecipientSourceResolution(payload.resolvedRequestedByDiscordIds(), "requested_by");
+    }
+
+    private void setWebhookSpanAttributes(Span span, SeerrWebhookPayload payload, MediaType mediaType, RecipientResolution recipientResolution) {
+        span.setAttribute("seerr.notification_type", payload.notificationType().name());
+        span.setAttribute("seerr.media_type", mediaType.name());
+        span.setAttribute("seerr.event", payload.event().trim());
+        span.setAttribute("seerr.recipient_source", recipientResolution.recipientSource());
+        span.setAttribute("seerr.recipient_count", recipientResolution.recipientIds().size());
+
+        if (!recipientResolution.recipientIds().isEmpty()) {
+            span.setAttribute(USER_IDS_ATTRIBUTE, recipientResolution.recipientIds().stream()
+                    .map(String::valueOf)
+                    .toList());
+        }
+        if (recipientResolution.malformedIds() > 0) {
+            span.setAttribute("seerr.malformed_recipient_count", recipientResolution.malformedIds());
+        }
+
+        Long requestId = payload.resolvedRequestId();
+        if (requestId != null) {
+            span.setAttribute("seerr.request_id", requestId);
+        }
+
+        Long issueId = payload.resolvedIssueId();
+        if (issueId != null) {
+            span.setAttribute("seerr.issue_id", issueId);
+        }
     }
 
     private String buildDescription(SeerrWebhookPayload payload) {
@@ -207,16 +277,6 @@ public class SeerrNotificationService {
         };
     }
 
-    private List<String> fallbackRecipientIds(SeerrWebhookPayload payload) {
-        if (isIssueNotification(payload.notificationType())) {
-            if (hasValues(payload.resolvedReportedByDiscordIds())) {
-                return payload.resolvedReportedByDiscordIds();
-            }
-            return payload.resolvedCommentedByDiscordIds();
-        }
-        return payload.resolvedRequestedByDiscordIds();
-    }
-
     private boolean isIssueNotification(NotificationType notificationType) {
         return notificationType == NotificationType.ISSUE_CREATED
                 || notificationType == NotificationType.ISSUE_RESOLVED
@@ -293,5 +353,11 @@ public class SeerrNotificationService {
         }
 
         return normalized.substring(0, Math.max(0, maxLength - 3)).trim() + "...";
+    }
+
+    private record RecipientResolution(Set<Long> recipientIds, String recipientSource, int malformedIds) {
+    }
+
+    private record RecipientSourceResolution(List<String> recipientIds, String source) {
     }
 }

@@ -1,12 +1,14 @@
 package de.elite12.discord_notify_proxy.seerr;
 
 import de.elite12.discord_notify_proxy.discord.DiscordService;
+import de.elite12.discord_notify_proxy.observability.NotificationMetrics;
 import de.elite12.discord_notify_proxy.seerr.model.DeliveryStatus;
 import de.elite12.discord_notify_proxy.seerr.model.MediaAvailabilityStatus;
 import de.elite12.discord_notify_proxy.seerr.model.MediaType;
 import de.elite12.discord_notify_proxy.seerr.model.NotificationType;
 import de.elite12.discord_notify_proxy.seerr.model.SeerrNotificationResult;
 import de.elite12.discord_notify_proxy.seerr.model.SeerrWebhookPayload;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.aot.DisabledInAotMode;
@@ -25,7 +27,9 @@ import static org.mockito.Mockito.verify;
 class SeerrNotificationServiceTest {
 
     private final DiscordService discordService = mock(DiscordService.class);
-    private final SeerrNotificationService service = new SeerrNotificationService(discordService);
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+    private final NotificationMetrics notificationMetrics = new NotificationMetrics(meterRegistry);
+    private final SeerrNotificationService service = new SeerrNotificationService(discordService, notificationMetrics);
 
     @Test
     void sendsToAllUniqueNotifyUserDiscordIds() {
@@ -55,6 +59,10 @@ class SeerrNotificationServiceTest {
 
         assertThat(result.status()).isEqualTo(DeliveryStatus.SENT);
         assertThat(result.recipientCount()).isEqualTo(2);
+        assertThat(meterRegistry.get("seerr.webhook.received").counter().count()).isEqualTo(1.0);
+        assertThat(meterRegistry.get("seerr.recipient.malformed").counter().count()).isEqualTo(1.0);
+        assertThat(meterRegistry.get("seerr.webhook.processed").counter().count()).isEqualTo(1.0);
+        assertThat(meterRegistry.get("seerr.recipient.count").summary().count()).isEqualTo(1L);
         verify(discordService, times(2)).sendDirectMessage(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.any(MessageEmbed.class));
     }
 
@@ -231,6 +239,8 @@ class SeerrNotificationServiceTest {
 
         assertThat(result.status()).isEqualTo(DeliveryStatus.IGNORED);
         assertThat(result.recipientCount()).isZero();
+        assertThat(meterRegistry.get("seerr.webhook.ignored").counter().count()).isEqualTo(1.0);
+        assertThat(meterRegistry.get("seerr.webhook.processed").counter().count()).isEqualTo(1.0);
         verify(discordService, never()).sendDirectMessage(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.any(MessageEmbed.class));
     }
 
