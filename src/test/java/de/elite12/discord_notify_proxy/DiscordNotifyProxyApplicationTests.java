@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import de.elite12.discord_notify_proxy.web.SeerrWebhookController;
@@ -11,6 +12,7 @@ import de.elite12.discord_notify_proxy.web.SeerrWebhookController;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = "app.discord-token=test-token")
+@DisabledInAotMode("Uses Mockito bean overrides that are only needed for JVM tests")
 class DiscordNotifyProxyApplicationTests {
 
     @Autowired

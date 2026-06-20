@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches-ignore:
+      - main
   pull_request:
 
 concurrency:
@@ -14,6 +16,7 @@ permissions:
 jobs:
   test:
     name: Maven Test
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -30,3 +33,26 @@ jobs:
 
       - name: Run test suite
         run: ./mvnw -B test
+
+  native-smoke:
+    name: Native Smoke Test
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: graalvm-community
+          java-version: '25'
+          cache: maven
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run native test
+        env:
+          APP_DISCORD_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN_SMOKETEST }}
+        run: ./mvnw -B -PnativeTest test
