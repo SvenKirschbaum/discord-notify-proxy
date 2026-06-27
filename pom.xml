@@ -73,6 +73,15 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<dependency>
+			<groupId>org.graalvm.buildtools</groupId>
+			<artifactId>graalvm-reachability-metadata</artifactId>
+			<version>1.1.1</version>
+			<classifier>repository</classifier>
+			<type>zip</type>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -88,8 +97,42 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>unpack-graalvm-reachability-metadata</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeGroupIds>org.graalvm.buildtools</includeGroupIds>
+							<includeArtifactIds>graalvm-reachability-metadata</includeArtifactIds>
+							<includeClassifiers>repository</includeClassifiers>
+							<includeTypes>zip</includeTypes>
+							<includeScope>provided</includeScope>
+							<outputDirectory>${project.build.directory}/graalvm-reachability-metadata</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>org.graalvm.buildtools</groupId>
 				<artifactId>native-maven-plugin</artifactId>
+				<configuration>
+					<metadataRepository>
+						<localPath>${project.build.directory}/graalvm-reachability-metadata</localPath>
+					</metadataRepository>
+				</configuration>
+				<executions>
+					<execution>
+						<id>add-reachability-metadata</id>
+						<goals>
+							<goal>add-reachability-metadata</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
