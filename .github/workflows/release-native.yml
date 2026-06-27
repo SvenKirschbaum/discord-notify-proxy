@@ -51,10 +51,15 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ github.ref_name }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
             type=semver,pattern={{major}},value=${{ github.ref_name }},enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
-      - name: Run native tests
+      - name: Build native OCI image
+        run: >-
+          ./mvnw -B -Pnative spring-boot:build-image
+          -Dspring-boot.build-image.imageName=${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+      - name: Smoke test built image
         env:
           APP_DISCORD_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN_SMOKETEST }}
-        run: ./mvnw -B -PnativeTest test
+        run: ./.github/scripts/smoke-test-image.sh ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
 
       - name: Log in to GitLab Container Registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
@@ -63,12 +68,16 @@ jobs:
           username: ${{ secrets.GITLAB_REGISTRY_USERNAME }}
           password: ${{ secrets.GITLAB_REGISTRY_PASSWORD }}
 
-      - name: Publish native OCI image
-        run: >-
-          ./mvnw -B -Pnative spring-boot:build-image
-          -Dspring-boot.build-image.publish=true
-          -Dspring-boot.build-image.imageName=${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
-          -Dspring-boot.build-image.tags=${{ join(fromJSON(steps.meta.outputs.json).tags, ',') }}
+      - name: Push native OCI image tags
+        run: |
+          primary_image="${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}"
+          while IFS= read -r tag; do
+            if [ -z "$tag" ]; then
+              continue
+            fi
+            docker tag "$primary_image" "$tag"
+            docker push "$tag"
+          done <<< '${{ steps.meta.outputs.tags }}'
 
       - name: Scan published image
         if: github.ref == 'refs/heads/main'

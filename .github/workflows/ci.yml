@@ -31,8 +31,8 @@ jobs:
       - name: Run test suite
         run: ./mvnw -B test
 
-  native-smoke:
-    name: Native Smoke Test
+  image-smoke:
+    name: Image Smoke Test
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -41,15 +41,19 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@6f3fa030c4b8f77c1f554a860f593a654538fa38 # v1
+      - name: Set up Java
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
         with:
-          distribution: graalvm-community
+          distribution: temurin
           java-version: '25'
           cache: maven
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run native test
+      - name: Build native OCI image
+        run: >-
+          ./mvnw -B -Pnative spring-boot:build-image
+          -Dspring-boot.build-image.imageName=discord-notify-proxy:ci-${{ github.sha }}
+
+      - name: Smoke test built image
         env:
           APP_DISCORD_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN_SMOKETEST }}
-        run: ./mvnw -B -PnativeTest test
+        run: ./.github/scripts/smoke-test-image.sh discord-notify-proxy:ci-${{ github.sha }}
