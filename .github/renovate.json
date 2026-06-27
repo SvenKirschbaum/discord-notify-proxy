@@ -5,8 +5,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
-        "(^|/)pom\\.xml$"
+      "managerFilePatterns": [
+        "/(^|/)pom\\.xml$/"
       ],
       "matchStrings": [
         "<paketo\\.builder-noble-java-tiny\\.image>(?<depName>paketobuildpacks/builder-noble-java-tiny):(?<currentValue>[^@<]+)@(?<currentDigest>sha256:[a-f0-9]+)</paketo\\.builder-noble-java-tiny\\.image>"
