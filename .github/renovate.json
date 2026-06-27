@@ -12,6 +12,17 @@
         "<paketo\\.builder-noble-java-tiny\\.image>(?<depName>paketobuildpacks/builder-noble-java-tiny):(?<currentValue>[^@<]+)@(?<currentDigest>sha256:[a-f0-9]+)</paketo\\.builder-noble-java-tiny\\.image>"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "\\.java-version$"
+      ],
+      "matchStrings": [
+        "(?<currentValue>.*)\\n"
+      ],
+      "datasourceTemplate": "java-version",
+      "depNameTemplate": "java"
     }
   ]
 }
