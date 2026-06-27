@@ -13,6 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<java.version>25</java.version>
+		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.147@sha256:cfcf6edbac710d1fd12ba82e3a9ee31746b716465f86cc9cfbead663e004a415</paketo.builder-noble-java-tiny.image>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -94,6 +95,10 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<image>
+						<builder>${paketo.builder-noble-java-tiny.image}</builder>
+						<trustBuilder>true</trustBuilder>
+					</image>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>

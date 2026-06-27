@@ -1,5 +1,17 @@
 {
   "extends": [
     "github>fallobst22/renovate-config"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/)pom\\.xml$"
+      ],
+      "matchStrings": [
+        "<paketo\\.builder-noble-java-tiny\\.image>(?<depName>paketobuildpacks/builder-noble-java-tiny):(?<currentValue>[^@<]+)@(?<currentDigest>sha256:[a-f0-9]+)</paketo\\.builder-noble-java-tiny\\.image>"
+      ],
+      "datasourceTemplate": "docker"
+    }
   ]
 }
