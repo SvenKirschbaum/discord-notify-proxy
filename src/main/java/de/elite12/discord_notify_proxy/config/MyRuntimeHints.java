@@ -1,5 +1,6 @@
 package de.elite12.discord_notify_proxy.config;
 
+import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 
@@ -8,6 +9,7 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 
 	@Override
 	public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+		hints.reflection().registerType(org.hibernate.validator.internal.util.logging.Log_$logger.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 		hints.reflection().registerType(net.dv8tion.jda.api.entities.User.class.arrayType());
 		hints.reflection().registerType(net.dv8tion.jda.api.entities.Role.class.arrayType());
 		hints.reflection().registerType(net.dv8tion.jda.api.entities.Guild.class.arrayType());
