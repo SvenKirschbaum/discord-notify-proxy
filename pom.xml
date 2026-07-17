@@ -13,7 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<java.version>25</java.version>
-		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.157@sha256:a1bf4af48a7674fe93b40a56674352f0189bdd32b7492e150391889917247e82</paketo.builder-noble-java-tiny.image>
+		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.159@sha256:c320b12e4d7c9097834090b3e7420e0dd606ac3f55288418ced6b93e348a78cf</paketo.builder-noble-java-tiny.image>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -76,7 +76,7 @@
 		<dependency>
 			<groupId>org.graalvm.buildtools</groupId>
 			<artifactId>graalvm-reachability-metadata</artifactId>
-			<version>1.1.4</version>
+			<version>1.1.5</version>
 			<classifier>repository</classifier>
 			<type>zip</type>
 			<scope>provided</scope>
