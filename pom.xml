@@ -13,7 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<java.version>25</java.version>
-		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.159@sha256:c320b12e4d7c9097834090b3e7420e0dd606ac3f55288418ced6b93e348a78cf</paketo.builder-noble-java-tiny.image>
+		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.162@sha256:4039f7aae77928322c0f50009d60c87106a682298d7af19f073139ad336d08be</paketo.builder-noble-java-tiny.image>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -76,7 +76,7 @@
 		<dependency>
 			<groupId>org.graalvm.buildtools</groupId>
 			<artifactId>graalvm-reachability-metadata</artifactId>
-			<version>1.1.5</version>
+			<version>1.1.6</version>
 			<classifier>repository</classifier>
 			<type>zip</type>
 			<scope>provided</scope>
@@ -88,7 +88,7 @@
 			<dependency>
 				<groupId>io.opentelemetry.instrumentation</groupId>
 				<artifactId>opentelemetry-instrumentation-bom</artifactId>
-				<version>2.29.0</version>
+				<version>2.30.0</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
