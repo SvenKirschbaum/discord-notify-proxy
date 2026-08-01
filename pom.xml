@@ -13,7 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<java.version>25</java.version>
-		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.162@sha256:4039f7aae77928322c0f50009d60c87106a682298d7af19f073139ad336d08be</paketo.builder-noble-java-tiny.image>
+		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.165@sha256:09e1a17d7f845a9d63451d6fdc0e73eb88d89adcdd0c4e3d3d90de26e82c5067</paketo.builder-noble-java-tiny.image>
 	</properties>
 	<dependencies>
 		<dependency>
