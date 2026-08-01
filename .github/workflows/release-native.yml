@@ -15,8 +15,10 @@ concurrency:
 
 permissions:
   contents: read
+  id-token: write
 
 env:
+  IMAGE: discord-notify-proxy
   IMAGE_NAME: registry.gitlab.com/fallobst22/images/discord-notify-proxy
 
 jobs:
@@ -77,6 +79,44 @@ jobs:
             docker tag "$primary_image" "$tag"
             docker push "$tag"
           done <<< '${{ steps.meta.outputs.tags }}'
+
+      - name: Trigger Flux image scans
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          WEBHOOK_URLS: ${{ secrets.FLUX_IMAGE_WEBHOOK_URLS }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${WEBHOOK_URLS}" ]]; then
+            echo "No Flux image webhook URLs configured; skipping."
+            exit 0
+          fi
+
+          oidc_token="$(
+            curl -fsSL \
+              -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+              "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=notification-controller" \
+              | jq -r '.value'
+          )"
+          payload="$(jq -cn --arg image "${IMAGE}" '{images: [$image]}')"
+
+          while IFS= read -r webhook_url; do
+            if [[ -z "${webhook_url}" ]]; then
+              continue
+            fi
+
+            echo "Calling Flux image webhook: ${webhook_url}"
+            if [[ "${webhook_url}" =~ ^([^:]+)://([^/?#]+) ]]; then
+              echo "Flux image webhook endpoint: ${BASH_REMATCH[1]}://${BASH_REMATCH[2]}"
+            fi
+
+            curl -fsS \
+              -X POST \
+              -H "Authorization: Bearer ${oidc_token}" \
+              -H "Content-Type: application/json" \
+              --data "${payload}" \
+              "${webhook_url}"
+          done <<< "${WEBHOOK_URLS}"
 
       - name: Scan published image
         if: github.ref == 'refs/heads/main'
