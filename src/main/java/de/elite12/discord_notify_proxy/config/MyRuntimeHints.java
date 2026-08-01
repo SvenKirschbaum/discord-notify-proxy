@@ -11,6 +11,8 @@ public class MyRuntimeHints implements RuntimeHintsRegistrar {
 	public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
 		hints.reflection().registerType(org.hibernate.validator.internal.util.logging.Log_$logger.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 		hints.reflection().registerType(org.hibernate.validator.internal.util.logging.Messages_$bundle.class, builder -> builder.withField("INSTANCE"));
+		hints.reflection().registerType(org.hibernate.validator.internal.constraintvalidators.bv.NotBlankValidator.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+		hints.reflection().registerType(org.hibernate.validator.internal.constraintvalidators.bv.NotNullValidator.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 		hints.reflection().registerType(net.dv8tion.jda.api.entities.User.class.arrayType());
 		hints.reflection().registerType(net.dv8tion.jda.api.entities.Role.class.arrayType());
 		hints.reflection().registerType(net.dv8tion.jda.api.entities.Guild.class.arrayType());

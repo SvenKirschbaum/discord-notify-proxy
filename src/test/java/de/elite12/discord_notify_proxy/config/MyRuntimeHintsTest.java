@@ -17,4 +17,17 @@ class MyRuntimeHintsTest {
 				.onFieldAccess(org.hibernate.validator.internal.util.logging.Messages_$bundle.class, "INSTANCE"))
 				.accepts(hints);
 	}
+
+	@Test
+	void registersConstructorsForUsedHibernateConstraintValidators() throws NoSuchMethodException {
+		RuntimeHints hints = new RuntimeHints();
+		new MyRuntimeHints().registerHints(hints, getClass().getClassLoader());
+
+		assertThat(RuntimeHintsPredicates.reflection()
+				.onConstructorInvocation(org.hibernate.validator.internal.constraintvalidators.bv.NotBlankValidator.class.getDeclaredConstructor()))
+				.accepts(hints);
+		assertThat(RuntimeHintsPredicates.reflection()
+				.onConstructorInvocation(org.hibernate.validator.internal.constraintvalidators.bv.NotNullValidator.class.getDeclaredConstructor()))
+				.accepts(hints);
+	}
 }
