@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.0</version>
+		<version>4.1.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>de.elite12</groupId>
@@ -13,8 +13,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<java.version>25</java.version>
-        <native-build-tools-plugin.version>1.1.9</native-build-tools-plugin.version>
-		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.172@sha256:6b3fa425bdbe81a766f2349265cf13aec4a070a0c6a77947b996df3ce7fa6cbd</paketo.builder-noble-java-tiny.image>
+        <native-build-tools-plugin.version>1.1.10</native-build-tools-plugin.version>
+		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.173@sha256:c1ee47bd1cf6fede0c40a17cf684fdb43a994bbff9f991ce3ab4276cd500c6dd</paketo.builder-noble-java-tiny.image>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -89,7 +89,7 @@
 			<dependency>
 				<groupId>io.opentelemetry.instrumentation</groupId>
 				<artifactId>opentelemetry-instrumentation-bom</artifactId>
-				<version>2.30.0</version>
+				<version>2.31.0</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
