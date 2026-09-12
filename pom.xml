@@ -14,7 +14,7 @@
 	<properties>
 		<java.version>25</java.version>
         <native-build-tools-plugin.version>1.1.12</native-build-tools-plugin.version>
-		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.184@sha256:ff218b8c7e2e6e2e85e6eac5f027f71d3fd52c082bfdebba4b5222a85db09195</paketo.builder-noble-java-tiny.image>
+		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.186@sha256:a836fcd7b0e4c047673e57039f243bc6d6d505fee86bce690579359839fdf7ea</paketo.builder-noble-java-tiny.image>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -66,7 +66,7 @@
 		<dependency>
 			<groupId>net.dv8tion</groupId>
 			<artifactId>JDA</artifactId>
-			<version>6.5.0</version>
+			<version>6.6.0</version>
 			<exclusions>
 				<exclusion>
 					<groupId>club.minnced</groupId>
