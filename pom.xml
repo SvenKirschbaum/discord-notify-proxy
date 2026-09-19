@@ -13,8 +13,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<java.version>25</java.version>
-        <native-build-tools-plugin.version>1.1.12</native-build-tools-plugin.version>
-		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.187@sha256:f73a4872ea76b8028274ce09011dd55962af2a2d483a1494b836b65886ad79a7</paketo.builder-noble-java-tiny.image>
+        <native-build-tools-plugin.version>1.1.14</native-build-tools-plugin.version>
+		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.190@sha256:7688d7b91bd173fbad6124797e5e5c73c848ac3143f9c0f5046ec9e5f4127673</paketo.builder-noble-java-tiny.image>
 	</properties>
 	<dependencies>
 		<dependency>
