@@ -13,8 +13,8 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<java.version>25</java.version>
-        <native-build-tools-plugin.version>1.1.17</native-build-tools-plugin.version>
-		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.200@sha256:7c62dd7e66b277ec9fa2b60d0ad74c4e9ef15db7910dcdf51126e62a02a31463</paketo.builder-noble-java-tiny.image>
+        <native-build-tools-plugin.version>1.1.18</native-build-tools-plugin.version>
+		<paketo.builder-noble-java-tiny.image>paketobuildpacks/builder-noble-java-tiny:0.0.205@sha256:3f9156f6204d7e1d90be3f29fc97ef15029815a5f2bd58e4b747ad45ae817aa1</paketo.builder-noble-java-tiny.image>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -89,7 +89,7 @@
 			<dependency>
 				<groupId>io.opentelemetry.instrumentation</groupId>
 				<artifactId>opentelemetry-instrumentation-bom</artifactId>
-				<version>2.33.0</version>
+				<version>2.33.1</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
